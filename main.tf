@@ -1,7 +1,7 @@
 provider "aws" {
-  region = "us-east-1"
-  access_key = "**********"
-  secret_key = "********************"
+  region = var.aws_region
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
 }
 
 # Create a new VPC
@@ -108,6 +108,7 @@ resource "aws_security_group" "my_security_group" {
 
 # Create an EC2 instance
 resource "aws_instance" "my_instance" {
+  count  =  2
   ami                    = "ami-0440d3b780d96b29d" # Example AMI ID, replace with a valid one
   instance_type          = "t2.micro"
   key_name               = "awskey" # Replace with your key pair name
@@ -116,7 +117,7 @@ resource "aws_instance" "my_instance" {
   vpc_security_group_ids = [aws_security_group.my_security_group.id]
 
   tags = {
-    Name = "my_instance"
+    Name = count.index == 0 ? "CI/CD-server" : "production-server"
   }
 }
 

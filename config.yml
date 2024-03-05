@@ -1,24 +1,23 @@
 ---
-- name: Install Jenkins and Docker and java
+- name: Install Jenkins, Docker, and Java
   hosts: all
-  become: true
+  become: yes
   tasks:
-    - name: Install Docker               # installing docker on both servers
+    - name: Install Docker
       yum:
         name: docker
         state: present
 
-    - name: Start Docker Service        # start and enable docker service
+    - name: Start Docker Service
       service:
         name: docker
         state: started
         enabled: yes
 
-    - name: Install Java                # installing java on both server (for jenkins and jenkins slave)
+    - name: Install Java
       yum:
         name: java-17
         state: present
-      
 
     - name: Add Jenkins Repository
       hosts: CI/CD-server
@@ -26,30 +25,37 @@
         name: jenkins
         description: Jenkins Official Repository
         baseurl: http://pkg.jenkins.io/redhat-stable
-        gpgcheck: no   # Disabling GPG check for Jenkins
-        state: present       # Only add Jenkins repository on 'CI/CD-server' hosts
+        gpgcheck: no
+        state: present
 
-    - name: Install Jenkins
+    - name: Install and Start Jenkins
       hosts: CI/CD-server
       yum:
         name: jenkins
         state: present
-      when: "'CI/CD-server' in group_names"        # Only install Jenkins on 'CI/CD-server' hosts
+      notify: Start Jenkins Service
+      when: "'CI/CD-server' in group_names"
 
+  handlers:
     - name: Start Jenkins Service
-      hosts: CI/CD-server
       service:
         name: jenkins
         state: started
         enabled: yes
-              # Only start Jenkins service on 'CI/CD-server' hosts
 
     - name: Pull SonarQube Docker image
       hosts: CI/CD-server
-      command: docker pull sonarqube:latest
-             # Only execute this task on 'CI/CD-server' hosts
+      docker_image:
+        name: sonarqube
+        tag: latest
+        source: pull
 
     - name: Run SonarQube container
       hosts: CI/CD-server
-      command: docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
-            # Only execute this task on 'CI/CD-server' hosts
+      docker_container:
+        name: sonarqube
+        image: sonarqube:latest
+        state: started
+        restart_policy: unless-stopped
+        published_ports:
+          - "9000:9000"

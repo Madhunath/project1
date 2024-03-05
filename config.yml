@@ -11,7 +11,7 @@
 
     - name: Install Java 17
       yum:
-        name: java-17-amazon-corretto-devel
+        name: java-17
         state: present
 
     - name: Ensure Docker SDK for Python is installed
@@ -33,8 +33,8 @@
       yum_repository:
         name: jenkins
         description: Jenkins repo
-        baseurl: http://pkg.jenkins-ci.org/redhat-stable/
-        gpgcheck: no
+        baseurl: https://pkg.jenkins.io/redhat-stable/
+        gpgcheck: no  # Consider enabling GPG check if you have the appropriate key
 
     - name: Install Jenkins
       yum:
@@ -51,18 +51,17 @@
     - name: Pull SonarQube Docker image
       docker_image:
         name: sonarqube
-        state: present
-      register: sonarqube_image
+        tag: latest
+        source: pull
 
-    - name: Pull and run SonarQube Docker container
+    - name: Run SonarQube Docker container
       docker_container:
         name: sonarqube
-        image: "{{ sonarqube_image.image }}"
+        image: sonarqube:latest
         state: started
+        restart_policy: unless-stopped
         published_ports:
           - "9000:9000"
-        restart_policy: unless-stopped
-      when: sonarqube_image is changed
 
   handlers:
     - name: start jenkins

@@ -14,6 +14,10 @@
         name: java-17-amazon-corretto-devel
         state: present
 
+    - name: Ensure Docker SDK for Python is installed
+      pip:
+        name: docker
+
   handlers:
     - name: start docker
       service:
@@ -25,27 +29,31 @@
   hosts: ci_cd_server
   become: yes
   tasks:
+    - name: Add Jenkins repository
+      yum_repository:
+        name: jenkins
+        description: Jenkins repo
+        baseurl: http://pkg.jenkins-ci.org/redhat-stable/
+        gpgcheck: no
+
     - name: Install Jenkins
       yum:
         name: jenkins
         state: present
       notify: start jenkins
 
-    # Ensure Docker is running before attempting to pull and run SonarQube
     - name: Ensure Docker is running
       service:
         name: docker
         state: started
         enabled: yes
 
-    # Explicitly pull the SonarQube Docker image
     - name: Pull SonarQube Docker image
       docker_image:
         name: sonarqube
         state: present
       register: sonarqube_image
 
-    # Pull and run SonarQube Docker container without volume mappings
     - name: Pull and run SonarQube Docker container
       docker_container:
         name: sonarqube

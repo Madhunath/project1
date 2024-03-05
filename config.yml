@@ -1,67 +1,51 @@
 ---
-- name: Setup Common Software (Docker and Java 17)
+- name: Install Jenkins and Docker and java
   hosts: all
-  become: yes
+  become: true
   tasks:
-    - name: Install Docker
+    - name: Install Docker               # installing docker on both servers
       yum:
         name: docker
-        state: latest
-      notify: start docker
-
-    - name: Install Java 17
-      yum:
-        name: java-17
         state: present
 
-  handlers:
-    - name: start docker
+    - name: Start Docker Service        # start and enable docker service
       service:
         name: docker
         state: started
         enabled: yes
 
-- name: Setup CI/CD Server (Jenkins and SonarQube)
-  hosts: ci_cd_server
-  become: yes
-  tasks:
-    - name: Add Jenkins repository
+    - name: Install Java                # installing java on both server (for jenkins and jenkins slave)
+      yum:
+        name: java-17
+        state: present
+      
+
+    - name: Add Jenkins Repository
       yum_repository:
         name: jenkins
-        description: Jenkins repo
-        baseurl: https://pkg.jenkins.io/redhat-stable/
-        gpgcheck: no  # Consider enabling GPG check if you have the appropriate key
+        description: Jenkins Official Repository
+        baseurl: http://pkg.jenkins.io/redhat-stable
+        gpgcheck: no   # Disabling GPG check for Jenkins
+        state: present
+      when: "'CI/CD-server' in group_names"       # Only add Jenkins repository on 'CI/CD-server' hosts
 
     - name: Install Jenkins
       yum:
         name: jenkins
         state: present
-      notify: start jenkins
+      when: "'CI/CD-server' in group_names"        # Only install Jenkins on 'CI/CD-server' hosts
 
-    - name: Ensure Docker is running
-      service:
-        name: docker
-        state: started
-        enabled: yes
-
-    - name: Pull SonarQube Docker image
-      docker_image:
-        name: sonarqube
-        tag: latest
-        source: pull
-
-    - name: Run SonarQube Docker container
-      docker_container:
-        name: sonarqube
-        image: sonarqube:latest
-        state: started
-        restart_policy: unless-stopped
-        published_ports:
-          - "9000:9000"
-
-  handlers:
-    - name: start jenkins
+    - name: Start Jenkins Service
       service:
         name: jenkins
         state: started
         enabled: yes
+      when: "'CI/CD-server' in group_names"          # Only start Jenkins service on 'CI/CD-server' hosts
+
+    - name: Pull SonarQube Docker image
+      command: docker pull sonarqube:latest
+      when: "'CI/CD-server' in group_names"            # Only execute this task on 'CI/CD-server' hosts
+
+    - name: Run SonarQube container
+      command: docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
+      when: "'CI/CD-server' in group_names"              # Only execute this task on 'CI/CD-server' hosts

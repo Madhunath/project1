@@ -21,31 +21,35 @@
       
 
     - name: Add Jenkins Repository
+      hosts: CI/CD-server
       yum_repository:
         name: jenkins
         description: Jenkins Official Repository
         baseurl: http://pkg.jenkins.io/redhat-stable
         gpgcheck: no   # Disabling GPG check for Jenkins
-        state: present
-      when: "'CI/CD-server' in group_names"       # Only add Jenkins repository on 'CI/CD-server' hosts
+        state: present       # Only add Jenkins repository on 'CI/CD-server' hosts
 
     - name: Install Jenkins
+      hosts: CI/CD-server
       yum:
         name: jenkins
         state: present
       when: "'CI/CD-server' in group_names"        # Only install Jenkins on 'CI/CD-server' hosts
 
     - name: Start Jenkins Service
+      hosts: CI/CD-server
       service:
         name: jenkins
         state: started
         enabled: yes
-      when: "'CI/CD-server' in group_names"          # Only start Jenkins service on 'CI/CD-server' hosts
+              # Only start Jenkins service on 'CI/CD-server' hosts
 
     - name: Pull SonarQube Docker image
+      hosts: CI/CD-server
       command: docker pull sonarqube:latest
-      when: "'CI/CD-server' in group_names"            # Only execute this task on 'CI/CD-server' hosts
+             # Only execute this task on 'CI/CD-server' hosts
 
     - name: Run SonarQube container
+      hosts: CI/CD-server
       command: docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
-      when: "'CI/CD-server' in group_names"              # Only execute this task on 'CI/CD-server' hosts
+            # Only execute this task on 'CI/CD-server' hosts

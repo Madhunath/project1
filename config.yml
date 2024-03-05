@@ -14,7 +14,7 @@
         name: java-17
         state: present
 
-     handlers:
+  handlers:
     - name: start docker
       service:
         name: docker

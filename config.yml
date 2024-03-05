@@ -14,11 +14,7 @@
         name: java-17
         state: present
 
-    - name: Ensure Docker SDK for Python is installed
-      pip:
-        name: docker
-
-  handlers:
+     handlers:
     - name: start docker
       service:
         name: docker

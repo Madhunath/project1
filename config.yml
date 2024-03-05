@@ -1,67 +1,91 @@
 ---
-- name: Setup Common Software (Docker and Java 17)
-  hosts: all
-  become: yes
+- hosts: all
+  become: true
+
+  pre_tasks:
+    - name: Update package lists
+      apt: update_cache=yes
+
+  roles:
+    - role: common
+      # Define tasks for installing docker and java-17
+    - role: jenkins
+      # Define tasks for installing and configuring jenkins (CI/CD-server only)
+    - role: sonarqube
+      # Define tasks for pulling and running sonarqube image (CI/CD-server only)
+
   tasks:
-    - name: Install Docker
-      yum:
-        name: docker
-        state: latest
-      notify: start docker
+    - name: Include conditional tasks based on server role
+      include_tasks: "{{ lookup('file', '/etc/hostname') }}.yml"
 
-    - name: Install Java 17
-      yum:
-        name: java-17
-        state: present
+...
 
-  handlers:
-    - name: start docker
-      service:
-        name: docker
-        state: started
-        enabled: yes
+# roles/common/main.yml
+---
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
 
-- name: Setup CI/CD Server (Jenkins and SonarQube)
-  hosts: ci_cd_server
-  become: yes
-  tasks:
-    - name: Add Jenkins repository
-      yum_repository:
-        name: jenkins
-        description: Jenkins repo
-        baseurl: https://pkg.jenkins.io/redhat-stable/
-        gpgcheck: no  # Consider enabling GPG check if you have the appropriate key
+- name: Add user to docker group
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
 
-    - name: Install Jenkins
-      yum:
-        name: jenkins
-        state: present
-      notify: start jenkins
+- name: Install Java 17
+  apt:
+    name: openjdk-17-jdk
+    state: present
 
-    - name: Ensure Docker is running
-      service:
-        name: docker
-        state: started
-        enabled: yes
+...
 
-    - name: Pull SonarQube Docker image
-      docker_image:
-        name: sonarqube
-        tag: latest
-        source: pull
+# roles/jenkins/main.yml (CI/CD-server only)
+---
+- name: Add Jenkins repository key
+  apt_key:
+    url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
+    state: present
 
-    - name: Run SonarQube Docker container
-      docker_container:
-        name: sonarqube
-        image: sonarqube:latest
-        state: started
-        restart_policy: unless-stopped
-        published_ports:
-          - "9000:9000"
+- name: Add Jenkins repository list
+  apt_repository:
+    repo: "deb https://pkg.jenkins.io/debian-stable binary/"
+    state: present
 
-  handlers:
-    - name: start jenkins
-      service:
-        name: jenkins
-        state: started
-        enabled: yes
+- name: Install Jenkins
+  apt:
+    name: jenkins
+    state: present
+
+- name: Start Jenkins service
+  systemd:
+    name: jenkins
+    state: started
+    enabled: yes
+
+...
+
+# roles/sonarqube/main.yml (CI/CD-server only)
+---
+- name: Pull Sonarqube docker image
+  docker_pull:
+    name: sonarqube:latest
+
+- name: Run Sonarqube container
+  docker_container:
+    name: sonarqube
+    image: sonarqube:latest
+    ports:
+      - "9000:9000"
+    state: started
+
+...
+
+# CI/CD-server.yml
+---
+# This file is empty, as tasks are already included in jenkins and sonarqube roles
+...
+
+# Production-server.yml
+---
+# This file is empty, as no tasks are needed for this server

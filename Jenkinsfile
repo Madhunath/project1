@@ -11,7 +11,7 @@ stages {
 
       stage('Checkout') {
             steps {
-                git branch: 'main', url:'https://github.com/Madhunath/project1.git'
+                git branch: 'main', url:'https://github.com/Madhunath/project1-ekart.git'
             }
         }
 

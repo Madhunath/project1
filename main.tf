@@ -122,7 +122,7 @@ resource "aws_security_group" "my_security_group" {
 resource "aws_instance" "my_instance" {
   count  =  2
   ami                    = "ami-0440d3b780d96b29d" # Example AMI ID, replace with a valid one
-  instance_type          = "t2.micro"
+  instance_type          = "t2.medium"
   key_name               = "awskey" # Replace with your key pair name
   subnet_id              = aws_subnet.my_subnet.id
   associate_public_ip_address = true

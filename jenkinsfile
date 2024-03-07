@@ -49,6 +49,16 @@ pipeline {
                 }
             }
         }
-    
+
+        stage('Docker Deploy to Container') {
+            agent { label 'Production-server' }                      //  Deploys the Docker image to a container on the Production-server
+            steps {
+                script {
+                    
+                    sh "docker run -d --name java-project -p 8070:8070 madhunath/shopping-cart:latest"
+                    
+                }
+            }
+        }
     }
 }

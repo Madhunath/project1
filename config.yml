@@ -1,9 +1,9 @@
 ---
-- name: Install Jenkins and Docker and java
-  hosts: all
+- name: Install Jenkins, Docker, and Java on server-1
+  hosts: server-1
   become: true
   tasks:
-    - name: Install Docker               # installing docker on both servers
+    - name: Install Docker               # installing docker on the server
       yum:
         name: docker
         state: present
@@ -14,7 +14,7 @@
         state: started
         enabled: yes
 
-    - name: Install Java                # installing java on both server (for jenkins and jenkins slave)
+    - name: Install Java                # installing java on the server
       yum:
         name: java-17
         state: present
@@ -27,25 +27,20 @@
         baseurl: http://pkg.jenkins.io/redhat-stable
         gpgcheck: no   # Disabling GPG check for Jenkins
         state: present
-      when: "'CI/CD-server' in group_names"       # Only add Jenkins repository on 'CI/CD-server' hosts
 
     - name: Install Jenkins
       yum:
         name: jenkins
         state: present
-      when: "'CI/CD-server' in group_names"        # Only install Jenkins on 'CI/CD-server' hosts
 
     - name: Start Jenkins Service
       service:
         name: jenkins
         state: started
         enabled: yes
-      when: "'CI/CD-server' in group_names"          # Only start Jenkins service on 'CI/CD-server' hosts
 
     - name: Pull SonarQube Docker image
       command: docker pull sonarqube:latest
-      when: "'CI/CD-server' in group_names"            # Only execute this task on 'CI/CD-server' hosts
 
     - name: Run SonarQube container
       command: docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
-      when: "'CI/CD-server' in group_names"              # Only execute this task on 'CI/CD-server' hosts

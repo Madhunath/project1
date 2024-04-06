@@ -119,9 +119,8 @@ resource "aws_security_group" "my_security_group" {
 }
 
 # Create an EC2 instance
-resource "aws_instance" "my_instance" {
-  count  =  1
-  ami                    = "ami-0440d3b780d96b29d" # Example AMI ID, replace with a valid one
+resource "aws_instance" "server-1" {
+  ami                    = "ami-051f8a213df8bc089" # Example AMI ID, replace with a valid one
   instance_type          = "t2.medium"
   key_name               = "projkey" # Replace with your key pair name
   subnet_id              = aws_subnet.my_subnet.id

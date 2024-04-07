@@ -2,7 +2,7 @@ pipeline {
     agent any
     tools{
         jdk  'jdk17'
-        maven  'maven3'
+        maven  'maven'
     }
     
     environment{
@@ -24,9 +24,9 @@ pipeline {
         
         stage('Sonarqube Analysis') {
             steps {
-                   sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.url=http://3.237.93.190:9000/ -Dsonar.login=squ_eb648b14ad2ddde6d893ece4efbadcec8793b23a -Dsonar.projectName=Shopping-Cart \
+                   sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.url=http://3.238.176.23:9000/ -Dsonar.login=squ_85a77b978af467b81ef54204853cf5210edd06b9 -Dsonar.projectName=Shopping-app \
                    -Dsonar.java.binaries=. \
-                   -Dsonar.projectKey=Shopping-Cart '''
+                   -Dsonar.projectKey=Shopping-app '''
             }
         }
         
@@ -42,22 +42,20 @@ pipeline {
                 script{
                     withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
                         
-                        sh "docker build -t shopping-cart -f docker/Dockerfile ."
-                        sh "docker tag  shopping-cart madhunath/shopping-cart:latest"
-                        sh "docker push madhunath/shopping-cart:latest"
+                        sh "docker build -t shopping-app -f docker/Dockerfile ."
+                        sh "docker tag  shopping-app madhunath/shopping-app:latest"
+                        sh "docker push madhunath/shopping-app:latest"
                     }
                 }
             }
         }
-
+    
         stage('Docker Deploy to Container') {
-            agent { label 'Production-server' }                      //  Deploys the Docker image to a container on the Production-server
             steps {
                 script {
-                    
-                    sh "docker run -d --name java-project -p 8070:8070 madhunath/shopping-cart:latest"
-                    
-                }
+                withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                    sh "docker run -d --name shopping-app -p 8070:8070 madhunath/shopping-app:latest" }
+                }                
             }
         }
     }

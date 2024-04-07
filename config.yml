@@ -1,6 +1,6 @@
 ---
 - name: Install Jenkins and Docker and Java
-  hosts: my-server
+  hosts: all
   become: true
   tasks:
     - name: Install Docker               # installing docker on the server
@@ -19,7 +19,6 @@
         name: java-17
         state: present
       
-
     - name: Add Jenkins Repository
       yum_repository:
         name: jenkins
@@ -39,6 +38,10 @@
         state: started
         enabled: yes
 
+- name: Pull and Run SonarQube on java-server
+  hosts: java-server
+  become: true
+  tasks:
     - name: Pull SonarQube Docker image
       command: docker pull sonarqube:latest
 

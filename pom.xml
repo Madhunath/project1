@@ -108,7 +108,7 @@
              <dependency>
     <groupId>org.jacoco</groupId> 
     <artifactId>jacoco-maven-plugin</artifactId>
-    <version>0.8.8</version>
+    <version>0.8.6</version>
 </dependency>
         <!-- Optional, for jQuery -->
         <dependency>
@@ -123,7 +123,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.6.4</version>
             </plugin>
 
                  <plugin>
@@ -153,12 +152,12 @@
     <repository>
       <id>maven-releases</id>
       <name>maven-releases</name>
-      <url>http://15.207.18.18:8081/repository/maven-releases/</url>
+      <url>http://3.108.254.192:8081/repository/maven-releases/</url>
     </repository>
     <snapshotRepository>
       <id>maven-snapshots</id>
       <name>maven-snapshots</name>
-      <url>http://15.207.18.18:8081/repository/maven-snapshots/</url>
+      <url>http://3.108.254.192:8081/repository/maven-snapshots/</url>
     </snapshotRepository>
 </distributionManagement>
 

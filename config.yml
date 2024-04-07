@@ -1,6 +1,6 @@
 ---
 - name: Install Jenkins and Docker and Java
-  hosts: all
+  hosts: my-server
   become: true
   tasks:
     - name: Install Docker               # installing docker on the server

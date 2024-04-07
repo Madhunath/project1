@@ -42,7 +42,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-rest-hal-browser</artifactId>
-            <version>3.5.3</version> <!-- Specify version -->
+            <version>3.3.9.RELEASE</version> <!-- Specify version -->
         </dependency>
 
         <!-- Spring Security -->

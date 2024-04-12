@@ -1,12 +1,16 @@
 pipeline {
     agent any
-    tools{
-        jdk  'jdk17'
-        maven  'maven'
+    tools {
+        jdk 'jdk17'
+        maven 'maven'
     }
     
-    environment{
-        SCANNER_HOME= tool 'sonar-scanner'
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+        DOCKER_REGISTRY = "madhunath"
+        IMAGE_NAME = "react-project"
+        BUILD_NUMBER = "${env.BUILD_NUMBER}"
+        UNIQUE_IMAGE_TAG = "${IMAGE_NAME}:${BUILD_NUMBER}"
     }
     
     stages {
@@ -24,13 +28,12 @@ pipeline {
         
         stage('Sonarqube Analysis') {
             steps {
-                   sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.url=http://3.238.176.23:9000/ -Dsonar.login=squ_85a77b978af467b81ef54204853cf5210edd06b9 -Dsonar.projectName=Shopping-app \
-                   -Dsonar.java.binaries=. \
-                   -Dsonar.projectKey=Shopping-app '''
+                sh """$SCANNER_HOME/bin/sonar-scanner -Dsonar.url=http://3.238.176.23:9000/ \
+                -Dsonar.login=squ_85a77b978af467b81ef54204853cf5210edd06b9 -Dsonar.projectName=Shopping-app \
+                -Dsonar.java.binaries=. -Dsonar.projectKey=Shopping-app"""
             }
         }
         
-                
         stage('Build') {
             steps {
                 sh "mvn clean package -DskipTests=true"
@@ -39,12 +42,11 @@ pipeline {
         
         stage('Docker Build & Push') {
             steps {
-                script{
+                script {
                     withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        
-                        sh "docker build -t shopping-app -f docker/Dockerfile ."
-                        sh "docker tag  shopping-app madhunath/shopping-app:latest"
-                        sh "docker push madhunath/shopping-app:latest"
+                        sh "docker build -t ${UNIQUE_IMAGE_TAG} -f Dockerfile ."
+                        sh "docker tag ${UNIQUE_IMAGE_TAG} ${DOCKER_REGISTRY}/${UNIQUE_IMAGE_TAG}"
+                        sh "docker push ${DOCKER_REGISTRY}/${UNIQUE_IMAGE_TAG}"
                     }
                 }
             }
@@ -53,9 +55,17 @@ pipeline {
         stage('Docker Deploy to Container') {
             steps {
                 script {
-                withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                    sh "docker run -d --name shopping-app -p 8070:8070 madhunath/shopping-app:latest" }
-                }                
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        // Stop and remove existing container if it exists
+                        sh "docker ps -aqf name=${IMAGE_NAME} | xargs -r docker stop | xargs -r docker rm"
+                        
+                        // Remove old Docker images (force removal)
+                        sh "docker images -q ${DOCKER_REGISTRY}/${IMAGE_NAME} | xargs -r docker rmi -f"
+                        
+                        // Deploy new Docker container
+                        sh "docker run -d --name ${IMAGE_NAME} -p 3000:3000 ${DOCKER_REGISTRY}/${UNIQUE_IMAGE_TAG}"
+                    }
+                }
             }
         }
     }

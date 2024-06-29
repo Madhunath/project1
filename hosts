@@ -1,3 +1,2 @@
 [my-server]
 java-server ansible_host=3.238.82.254 ansible_port=22
-react-server ansible_host=3.238.82.254 ansible_port=22

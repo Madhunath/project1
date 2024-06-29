@@ -129,6 +129,6 @@ resource "aws_instance" "my-instance" {
   vpc_security_group_ids = [aws_security_group.my_security_group.id]
 
   tags = {
-    Name = count.index == 0 ? "java-server"
+    Name = "java-server"
   }
 }

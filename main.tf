@@ -120,7 +120,7 @@ resource "aws_security_group" "my_security_group" {
 
 # Create an EC2 instance
 resource "aws_instance" "my-instance" {
-  count          = 2
+  count          = 1
   ami                    = "ami-051f8a213df8bc089" # Example AMI ID, replace with a valid one
   instance_type          = "t2.large"
   key_name               = "newkey" # Replace with your key pair name
@@ -129,6 +129,6 @@ resource "aws_instance" "my-instance" {
   vpc_security_group_ids = [aws_security_group.my_security_group.id]
 
   tags = {
-    Name = count.index == 0 ? "java-server" : "react-server"
+    Name = count.index == 0 ? "java-server"
   }
 }
